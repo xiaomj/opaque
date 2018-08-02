@@ -161,6 +161,7 @@ trait OpaqueOperatorExec extends SparkPlan {
   }
 
   override def executeCollect(): Array[InternalRow] = {
+    println("test")
     executeBlocked().collect().flatMap { block =>
       Utils.decryptBlockFlatbuffers(block)
     }
@@ -238,7 +239,13 @@ case class ObliviousFilterExec(condition: Expression, child: SparkPlan)
 
   override def executeBlocked(): RDD[Block] = {
     val conditionSer = Utils.serializeFilterExpression(condition, child.output)
-    timeOperator(child.asInstanceOf[OpaqueOperatorExec].executeBlocked(), "ObliviousFilterExec") {
+
+    // 执行hive的table scan
+    var encryptedRows: RDD[Block] = child.execute().mapPartitions { rowIter =>
+      Iterator(Utils.encryptInternalRowsFlatbuffers(rowIter.toSeq, output.map(_.dataType)))
+    }
+
+    timeOperator(encryptedRows, "ObliviousFilterExec") {
       childRDD => childRDD.map { block =>
         val (enclave, eid) = Utils.initEnclave()
         Block(enclave.Filter(eid, conditionSer, block.bytes))

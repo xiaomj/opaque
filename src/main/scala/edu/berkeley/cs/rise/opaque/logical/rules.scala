@@ -55,17 +55,19 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
   }
 
   def isEncrypted(plan: LogicalPlan): Boolean = {
-    plan.find {
-      case _: OpaqueOperator => true
-      case _ => false
-    }.nonEmpty
+//    plan.find {
+//      case _: OpaqueOperator => true
+//      case _ => false
+//    }.nonEmpty
+    true
   }
 
   def isEncrypted(plan: SparkPlan): Boolean = {
-    plan.find {
-      case _: OpaqueOperatorExec => true
-      case _ => false
-    }.nonEmpty
+//    plan.find {
+//      case _: OpaqueOperatorExec => true
+//      case _ => false
+//    }.nonEmpty
+    true
   }
 
   def apply(plan: LogicalPlan): LogicalPlan = plan transformUp {

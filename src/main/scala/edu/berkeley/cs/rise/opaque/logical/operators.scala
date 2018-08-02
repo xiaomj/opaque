@@ -84,6 +84,11 @@ case class EncryptedLocalRelation(
   }
 }
 
+case class EncryptedMetastoreRelation()
+  extends OpaqueOperator with MultiInstanceRelation {
+
+}
+
 case class EncryptedBlockRDD(
     output: Seq[Attribute],
     rdd: RDD[Block],
