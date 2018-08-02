@@ -78,7 +78,7 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
 //    case p @ Project(projectList, child) if isOblivious(child) =>
 //      ObliviousProject(projectList, child.asInstanceOf[OpaqueOperator])
     case p @ Project(projectList, child) if isEncrypted(child) =>
-      EncryptedProject(projectList, child.asInstanceOf[OpaqueOperator])
+      EncryptedProject(projectList, child)
 
     // We don't support null values yet, so there's no point in checking whether the output of an
     // encrypted operator is null
@@ -90,19 +90,19 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
 //    case p @ Filter(condition, child) if isOblivious(child) =>
 //      ObliviousFilter(condition, ObliviousPermute(child.asInstanceOf[OpaqueOperator]))
     case p @ Filter(condition, child) if isEncrypted(child) =>
-      EncryptedFilter(condition, child.asInstanceOf[OpaqueOperator])
+      EncryptedFilter(condition, child)
 
 //    case p @ Sort(order, true, child) if isOblivious(child) =>
 //      ObliviousSort(order, child.asInstanceOf[OpaqueOperator])
     case p @ Sort(order, true, child) if isEncrypted(child) =>
-      EncryptedSort(order, child.asInstanceOf[OpaqueOperator])
+      EncryptedSort(order, child)
 
 //    case p @ Join(left, right, joinType, condition) if isOblivious(p) =>
 //      ObliviousJoin(
 //        left.asInstanceOf[OpaqueOperator], right.asInstanceOf[OpaqueOperator], joinType, condition)
     case p @ Join(left, right, joinType, condition) if isEncrypted(p) =>
       EncryptedJoin(
-        left.asInstanceOf[OpaqueOperator], right.asInstanceOf[OpaqueOperator], joinType, condition)
+        left, right, joinType, condition)
 
 //    case p @ Aggregate(groupingExprs, aggExprs, child) if isOblivious(p) =>
 //      UndoCollapseProject.separateProjectAndAgg(p) match {
@@ -130,13 +130,13 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
               groupingExprs, aggExprs,
               EncryptedSort(
                 groupingExprs.map(e => SortOrder(e, Ascending)),
-                child.asInstanceOf[OpaqueOperator])))
+                child)))
         case None =>
           EncryptedAggregate(
             groupingExprs, aggExprs,
             EncryptedSort(
               groupingExprs.map(e => SortOrder(e, Ascending)),
-              child.asInstanceOf[OpaqueOperator]))
+              child))
       }
 
     // For now, just ignore limits. TODO: Implement Opaque operators for these
@@ -144,7 +144,7 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
     case p @ LocalLimit(_, child) if isEncrypted(p) => child
 
     case p @ Union(Seq(left, right)) if isEncrypted(p) =>
-      ObliviousUnion(left.asInstanceOf[OpaqueOperator], right.asInstanceOf[OpaqueOperator])
+      ObliviousUnion(left, right)
 
     case InMemoryRelationMatcher(output, storageLevel, child) if isEncrypted(child) =>
       EncryptedBlockRDD(
