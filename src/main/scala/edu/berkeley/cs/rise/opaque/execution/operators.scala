@@ -48,6 +48,12 @@ trait BinaryExecNode extends SparkPlan {
   override final def children: Seq[SparkPlan] = Seq(left, right)
 }
 
+/**
+  * 手动加密
+  * @param output
+  * @param plaintextData
+  * @param isOblivious
+  */
 case class EncryptedLocalTableScanExec(
     output: Seq[Attribute],
     plaintextData: Seq[InternalRow],
@@ -84,6 +90,11 @@ case class EncryptedLocalTableScanExec(
   }
 }
 
+/**
+  * 需要手动加密
+  * @param isOblivious
+  * @param child
+  */
 case class EncryptExec(
     override val isOblivious: Boolean,
     child: SparkPlan)
@@ -98,6 +109,12 @@ case class EncryptExec(
   }
 }
 
+/**
+  * 磁盘文件已经加密，不需要加密
+  * @param output
+  * @param rdd
+  * @param isOblivious
+  */
 case class EncryptedBlockRDDScanExec(
     output: Seq[Attribute],
     rdd: RDD[Block],
