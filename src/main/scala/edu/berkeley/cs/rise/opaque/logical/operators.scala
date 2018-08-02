@@ -49,7 +49,7 @@ trait OpaqueOperator extends LogicalPlan {
 }
 
 case class Encrypt(
-    override val isOblivious: Boolean,
+    val isOblivious: Boolean,
     child: LogicalPlan)
   extends UnaryNode {
 
@@ -59,7 +59,7 @@ case class Encrypt(
 case class EncryptedLocalRelation(
     output: Seq[Attribute],
     plaintextData: Seq[InternalRow],
-    override val isOblivious: Boolean)
+    val isOblivious: Boolean)
   extends LeafNode with MultiInstanceRelation {
 
   // A local relation must have resolved output.
@@ -87,7 +87,7 @@ case class EncryptedLocalRelation(
 case class EncryptedBlockRDD(
     output: Seq[Attribute],
     rdd: RDD[Block],
-    override val isOblivious: Boolean)
+    val isOblivious: Boolean)
   extends LogicalPlan with MultiInstanceRelation {
 
   override def children: Seq[LogicalPlan] = Nil
