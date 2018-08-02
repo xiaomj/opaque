@@ -51,7 +51,7 @@ trait OpaqueOperator extends LogicalPlan {
 case class Encrypt(
     override val isOblivious: Boolean,
     child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
 
   override def output: Seq[Attribute] = child.output
 }
@@ -60,7 +60,7 @@ case class EncryptedLocalRelation(
     output: Seq[Attribute],
     plaintextData: Seq[InternalRow],
     override val isOblivious: Boolean)
-  extends LeafNode with MultiInstanceRelation with LogicalPlan {
+  extends LeafNode with MultiInstanceRelation {
 
   // A local relation must have resolved output.
   require(output.forall(_.resolved), "Unresolved attributes found when constructing LocalRelation.")
@@ -105,40 +105,40 @@ case class EncryptedBlockRDD(
 }
 
 case class ObliviousProject(projectList: Seq[NamedExpression], child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
 
   override def output: Seq[Attribute] = projectList.map(_.toAttribute)
 }
 
 case class EncryptedProject(projectList: Seq[NamedExpression], child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
 
   override def output: Seq[Attribute] = projectList.map(_.toAttribute)
 }
 
 case class ObliviousFilter(condition: Expression, child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
 
   override def output: Seq[Attribute] = child.output
 }
 
 case class EncryptedFilter(condition: Expression, child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
 
   override def output: Seq[Attribute] = child.output
 }
 
-case class ObliviousPermute(child: LogicalPlan) extends UnaryNode with LogicalPlan {
+case class ObliviousPermute(child: LogicalPlan) extends UnaryNode {
   override def output: Seq[Attribute] = child.output
 }
 
 case class ObliviousSort(order: Seq[SortOrder], child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
   override def output: Seq[Attribute] = child.output
 }
 
 case class EncryptedSort(order: Seq[SortOrder], child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
   override def output: Seq[Attribute] = child.output
 }
 
@@ -146,7 +146,7 @@ case class ObliviousAggregate(
     groupingExpressions: Seq[Expression],
     aggExpressions: Seq[NamedExpression],
     child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
 
   override def producedAttributes: AttributeSet =
     AttributeSet(aggExpressions) -- AttributeSet(groupingExpressions)
@@ -157,7 +157,7 @@ case class EncryptedAggregate(
     groupingExpressions: Seq[Expression],
     aggExpressions: Seq[NamedExpression],
     child: LogicalPlan)
-  extends UnaryNode with LogicalPlan {
+  extends UnaryNode {
 
   override def producedAttributes: AttributeSet =
     AttributeSet(aggExpressions) -- AttributeSet(groupingExpressions)
@@ -169,7 +169,7 @@ case class ObliviousJoin(
     right: LogicalPlan,
     joinType: JoinType,
     condition: Option[Expression])
-  extends BinaryNode with LogicalPlan {
+  extends BinaryNode {
 
   override def output: Seq[Attribute] = left.output ++ right.output
 }
@@ -179,7 +179,7 @@ case class EncryptedJoin(
     right: LogicalPlan,
     joinType: JoinType,
     condition: Option[Expression])
-  extends BinaryNode with LogicalPlan {
+  extends BinaryNode {
 
   override def output: Seq[Attribute] = left.output ++ right.output
 }
@@ -187,7 +187,7 @@ case class EncryptedJoin(
 case class ObliviousUnion(
     left: LogicalPlan,
     right: LogicalPlan)
-  extends BinaryNode with LogicalPlan {
+  extends BinaryNode {
 
   override def output: Seq[Attribute] = left.output
 }
