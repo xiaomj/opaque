@@ -27,9 +27,7 @@ import org.apache.spark.sql.catalyst.expressions.And
 import org.apache.spark.sql.catalyst.expressions.Ascending
 import org.apache.spark.sql.catalyst.expressions.IsNotNull
 import org.apache.spark.sql.catalyst.expressions.SortOrder
-import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.catalyst.rules.Rule
-import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.execution.datasources.LogicalRelation
 
 object EncryptLocalRelationRule extends Rule[LogicalPlan] {
@@ -95,6 +93,6 @@ object EncryptRule extends Rule[LogicalPlan] {
         Utils.ensureCached(
           child.asInstanceOf[OpaqueOperatorExec].executeBlocked(),
           storageLevel),
-        isOblivious(child))
+          false)
   }
 }
