@@ -35,6 +35,8 @@ import edu.berkeley.cs.rise.opaque.execution._
 import edu.berkeley.cs.rise.opaque.logical._
 
 object OpaqueOperators extends Strategy {
+  self: SparkPlanner =>
+
   def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
     case EncryptedProject(projectList, child) =>
       ObliviousProjectExec(projectList, planLater(child)) :: Nil
@@ -50,7 +52,7 @@ object OpaqueOperators extends Strategy {
       pruneFilterProject(
         projectList,
         otherPredicates,
-        identity[Seq[Expression]],
+        identity[Seq[Expression]] _,
         HiveTableScanExec(_, relation, pruningPredicates)(sparkSession)) :: Nil
 
     case EncryptedFilter(condition, child) =>
