@@ -386,8 +386,8 @@ case class ObliviousUnionExec(
     left.output
 
   override def executeBlocked() = {
-    val leftRDD = execute(left)
-    val rightRDD = execute(right)
+    val leftRDD = executeChild(left)
+    val rightRDD = executeChild(right)
     Utils.ensureCached(leftRDD)
     time("Force left child of ObliviousUnionExec") { leftRDD.count }
     Utils.ensureCached(rightRDD)
