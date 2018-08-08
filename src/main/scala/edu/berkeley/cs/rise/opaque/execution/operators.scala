@@ -129,7 +129,7 @@ trait OpaqueOperatorExec extends SparkPlan {
   def executeBlocked(): RDD[Block]
 
   def execute(child: SparkPlan) = child match {
-    case :OpaqueOperatorExec =>
+    case child :OpaqueOperatorExec =>
       child.asInstanceOf[OpaqueOperatorExec].executeBlocked()
     case _ =>
       // 默认用第一列存放加密密文
