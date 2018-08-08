@@ -55,7 +55,7 @@ trait BinaryExecNode extends SparkPlan {
   * @param output
   * @param plaintextData
   */
-case class EncryptedLocalTableScanExec(
+case class EncryptLocalRelationExec(
     output: Seq[Attribute],
     plaintextData: Seq[InternalRow])
   extends LeafExecNode with OpaqueOperatorExec {
@@ -108,7 +108,7 @@ case class EncryptExec(child: SparkPlan)
   * @param output
   * @param rdd
   */
-case class EncryptedBlockRDDScanExec(
+case class EncryptLogicalRelationExec(
     output: Seq[Attribute],
     rdd: RDD[Block])
   extends LeafExecNode with OpaqueOperatorExec {
@@ -211,18 +211,18 @@ trait OpaqueOperatorExec extends SparkPlan {
   }
 }
 
-case class EncryptedSortExec(order: Seq[SortOrder], child: SparkPlan)
+case class EncryptSortExec(order: Seq[SortOrder], child: SparkPlan)
   extends UnaryExecNode with OpaqueOperatorExec {
 
   override def output: Seq[Attribute] = child.output
 
   override def executeBlocked() = {
     val orderSer = Utils.serializeSortOrder(order, child.output)
-    EncryptedSortExec.sort(child.asInstanceOf[OpaqueOperatorExec].executeBlocked(), orderSer)
+    EncryptSortExec.sort(child.asInstanceOf[OpaqueOperatorExec].executeBlocked(), orderSer)
   }
 }
 
-object EncryptedSortExec {
+object EncryptSortExec {
   import Utils.time
 
   def sort(childRDD: RDD[Block], orderSer: Array[Byte]): RDD[Block] = {
@@ -311,7 +311,7 @@ case class ObliviousFilterExec(condition: Expression, child: SparkPlan)
   }
 }
 
-case class EncryptedAggregateExec(
+case class EncryptAggregateExec(
     groupingExpressions: Seq[Expression],
     aggExpressions: Seq[NamedExpression],
     child: SparkPlan)
@@ -359,7 +359,7 @@ case class EncryptedAggregateExec(
   }
 }
 
-case class EncryptedSortMergeJoinExec(
+case class EncryptSortMergeJoinExec(
     joinType: JoinType,
     leftKeys: Seq[Expression],
     rightKeys: Seq[Expression],

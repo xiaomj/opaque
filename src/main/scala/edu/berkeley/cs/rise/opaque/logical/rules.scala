@@ -42,7 +42,7 @@ object EncryptRule extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transformUp {
     // 读取外部加密文件
     case l @ LogicalRelation(baseRelation: EncryptedScan, _, _) =>
-      EncryptedBlockRDD(l.output, baseRelation.buildBlockedScan())
+      EncryptedLogicalRelation(l.output, baseRelation.buildBlockedScan())
 
     case p @ Project(projectList, child) =>
       EncryptedProject(projectList, child)
@@ -88,7 +88,7 @@ object EncryptRule extends Rule[LogicalPlan] {
       ObliviousUnion(left, right)
 
     case InMemoryRelationMatcher(output, storageLevel, child) =>
-      EncryptedBlockRDD(
+      EncryptedLogicalRelation(
         output,
         Utils.ensureCached(child.asInstanceOf[OpaqueOperatorExec].executeBlocked(), storageLevel))
   }

@@ -49,7 +49,7 @@ case class Encrypt(child: LogicalPlan)
   override def output: Seq[Attribute] = child.output
 }
 
-case class EncryptedLocalRelation(
+case class EncryptLocalRelation(
     output: Seq[Attribute],
     plaintextData: Seq[InternalRow])
   extends LeafNode with MultiInstanceRelation {
@@ -63,30 +63,30 @@ case class EncryptedLocalRelation(
    * query.
    */
   override final def newInstance(): this.type = {
-    EncryptedLocalRelation(output.map(_.newInstance()), plaintextData).asInstanceOf[this.type]
+    EncryptLocalRelation(output.map(_.newInstance()), plaintextData).asInstanceOf[this.type]
   }
 
   override protected def stringArgs = Iterator(output)
 
   override def sameResult(plan: LogicalPlan): Boolean = plan match {
-    case EncryptedLocalRelation(otherOutput, otherPlaintextData) =>
+    case EncryptLocalRelation(otherOutput, otherPlaintextData) =>
       (otherOutput.map(_.dataType) == output.map(_.dataType) && otherPlaintextData == plaintextData)
     case _ => false
   }
 }
 
-case class EncryptedBlockRDD(
+case class EncryptLogicalRelation(
     output: Seq[Attribute],
     rdd: RDD[Block])
   extends LogicalPlan with MultiInstanceRelation {
 
   override def children: Seq[LogicalPlan] = Nil
 
-  override def newInstance(): EncryptedBlockRDD.this.type =
-    EncryptedBlockRDD(output.map(_.newInstance()), rdd).asInstanceOf[this.type]
+  override def newInstance(): EncryptLogicalRelation.this.type =
+    EncryptLogicalRelation(output.map(_.newInstance()), rdd).asInstanceOf[this.type]
 
   override def sameResult(plan: LogicalPlan): Boolean = plan match {
-    case EncryptedBlockRDD(_, otherRDD) =>
+    case EncryptLogicalRelation(_, otherRDD) =>
       rdd.id == otherRDD.id
     case _ => false
   }
@@ -100,7 +100,7 @@ case class ObliviousProject(projectList: Seq[NamedExpression], child: LogicalPla
   override def output: Seq[Attribute] = projectList.map(_.toAttribute)
 }
 
-case class EncryptedProject(projectList: Seq[NamedExpression], child: LogicalPlan)
+case class EncryptProject(projectList: Seq[NamedExpression], child: LogicalPlan)
   extends UnaryNode {
 
   override def output: Seq[Attribute] = projectList.map(_.toAttribute)
@@ -112,7 +112,7 @@ case class ObliviousFilter(condition: Expression, child: LogicalPlan)
   override def output: Seq[Attribute] = child.output
 }
 
-case class EncryptedFilter(condition: Expression, child: LogicalPlan)
+case class EncryptFilter(condition: Expression, child: LogicalPlan)
   extends UnaryNode {
 
   override def output: Seq[Attribute] = child.output
@@ -127,7 +127,7 @@ case class ObliviousSort(order: Seq[SortOrder], child: LogicalPlan)
   override def output: Seq[Attribute] = child.output
 }
 
-case class EncryptedSort(order: Seq[SortOrder], child: LogicalPlan)
+case class EncryptSort(order: Seq[SortOrder], child: LogicalPlan)
   extends UnaryNode {
   override def output: Seq[Attribute] = child.output
 }
@@ -143,7 +143,7 @@ case class ObliviousAggregate(
   override def output: Seq[Attribute] = aggExpressions.map(_.toAttribute)
 }
 
-case class EncryptedAggregate(
+case class EncryptAggregate(
     groupingExpressions: Seq[Expression],
     aggExpressions: Seq[NamedExpression],
     child: LogicalPlan)
@@ -164,7 +164,7 @@ case class ObliviousJoin(
   override def output: Seq[Attribute] = left.output ++ right.output
 }
 
-case class EncryptedJoin(
+case class EncryptJoin(
     left: LogicalPlan,
     right: LogicalPlan,
     joinType: JoinType,

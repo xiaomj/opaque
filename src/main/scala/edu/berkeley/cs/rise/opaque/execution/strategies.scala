@@ -80,8 +80,8 @@ object EncryptStrategy extends Strategy {
     case EncryptedLocalRelation(output, plaintextData) =>
       EncryptedLocalTableScanExec(output, plaintextData) :: Nil
 
-    case EncryptedBlockRDD(output, rdd) =>
-      EncryptedBlockRDDScanExec(output, rdd) :: Nil
+    case EncryptedLogicalRelation(output, rdd) =>
+      EncryptedLogicalRelationExec(output, rdd) :: Nil
 
     case _ => Nil
   }

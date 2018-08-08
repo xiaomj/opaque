@@ -33,7 +33,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
 
 import edu.berkeley.cs.rise.opaque.benchmark._
-import edu.berkeley.cs.rise.opaque.execution.EncryptedBlockRDDScanExec
+import edu.berkeley.cs.rise.opaque.execution.EncryptedLogicalRelationExec
 
 trait OpaqueOperatorTests extends FunSuite with BeforeAndAfterAll { self =>
   def spark: SparkSession
@@ -122,7 +122,7 @@ trait OpaqueOperatorTests extends FunSuite with BeforeAndAfterAll { self =>
   testOpaqueOnly("cache") { securityLevel =>
     def numCached(ds: Dataset[_]): Int =
       ds.queryExecution.executedPlan.collect {
-        case cached: EncryptedBlockRDDScanExec
+        case cached: EncryptedLogicalRelationExec
             if cached.rdd.getStorageLevel != StorageLevel.NONE =>
           println(cached.rdd.getStorageLevel)
           cached
