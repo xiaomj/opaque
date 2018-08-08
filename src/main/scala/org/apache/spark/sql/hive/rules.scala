@@ -17,6 +17,7 @@
 
 package org.apache.spark.sql.hive.rules
 
+import edu.berkeley.cs.rise.opaque.logical._
 import edu.berkeley.cs.rise.opaque.EncryptedScan
 import edu.berkeley.cs.rise.opaque.Utils
 import edu.berkeley.cs.rise.opaque.execution.OpaqueOperatorExec
@@ -31,6 +32,7 @@ import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.execution.datasources.LogicalRelation
 import org.apache.spark.sql.hive.MetastoreRelation
+
 
 
 object EncryptLocalRelation extends Rule[LogicalPlan] {
