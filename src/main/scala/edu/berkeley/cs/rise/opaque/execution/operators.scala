@@ -28,6 +28,7 @@ import org.apache.spark.sql.catalyst.plans.JoinType
 import org.apache.spark.sql.catalyst.plans.physical.Partitioning
 import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.types._
+import scala.collection.mutable.ArrayBuffer
 
 
 trait LeafExecNode extends SparkPlan {
