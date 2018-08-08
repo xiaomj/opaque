@@ -78,7 +78,7 @@ object EncryptStrategy extends Strategy {
       EncryptExec(planLater(child)) :: Nil
 
     case EncryptLocalRelation(output, plaintextData) =>
-      EncryptLocalTableScanExec(output, plaintextData) :: Nil
+      EncryptLocalRelationExec(output, plaintextData) :: Nil
 
     case EncryptLogicalRelation(output, rdd) =>
       EncryptLogicalRelationExec(output, rdd) :: Nil
