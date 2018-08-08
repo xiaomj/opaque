@@ -63,15 +63,14 @@ case class EncryptedLocalRelation(
    * query.
    */
   override final def newInstance(): this.type = {
-    EncryptedLocalRelation(output.map(_.newInstance()), plaintextData, isOblivious).asInstanceOf[this.type]
+    EncryptedLocalRelation(output.map(_.newInstance()), plaintextData).asInstanceOf[this.type]
   }
 
   override protected def stringArgs = Iterator(output)
 
   override def sameResult(plan: LogicalPlan): Boolean = plan match {
-    case EncryptedLocalRelation(otherOutput, otherPlaintextData, otherIsOblivious) =>
-      (otherOutput.map(_.dataType) == output.map(_.dataType) && otherPlaintextData == plaintextData
-        && otherIsOblivious == isOblivious)
+    case EncryptedLocalRelation(otherOutput, otherPlaintextData) =>
+      (otherOutput.map(_.dataType) == output.map(_.dataType) && otherPlaintextData == plaintextData)
     case _ => false
   }
 }
@@ -84,11 +83,11 @@ case class EncryptedBlockRDD(
   override def children: Seq[LogicalPlan] = Nil
 
   override def newInstance(): EncryptedBlockRDD.this.type =
-    EncryptedBlockRDD(output.map(_.newInstance()), rdd, isOblivious).asInstanceOf[this.type]
+    EncryptedBlockRDD(output.map(_.newInstance()), rdd).asInstanceOf[this.type]
 
   override def sameResult(plan: LogicalPlan): Boolean = plan match {
-    case EncryptedBlockRDD(_, otherRDD, otherIsOblivious) =>
-      rdd.id == otherRDD.id && isOblivious == otherIsOblivious
+    case EncryptedBlockRDD(_, otherRDD) =>
+      rdd.id == otherRDD.id
     case _ => false
   }
 

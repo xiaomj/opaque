@@ -33,8 +33,8 @@ import org.apache.spark.sql.catalyst.plans.logical._
 object EncryptLocalRelationRule extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transform {
     // 读取内存明文
-    case Encrypt(isOblivious, LocalRelation(output, data)) =>
-      EncryptedLocalRelation(output, data, isOblivious)
+    case Encrypt(LocalRelation(output, data)) =>
+      EncryptedLocalRelation(output, data)
   }
 }
 

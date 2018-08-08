@@ -54,7 +54,6 @@ trait BinaryExecNode extends SparkPlan {
   * 手动加密
   * @param output
   * @param plaintextData
-  * @param isOblivious
   */
 case class EncryptedLocalTableScanExec(
     output: Seq[Attribute],
@@ -90,7 +89,6 @@ case class EncryptedLocalTableScanExec(
 
 /**
   * 需要手动加密
-  * @param isOblivious
   * @param child
   */
 case class EncryptExec(child: SparkPlan)
@@ -109,7 +107,6 @@ case class EncryptExec(child: SparkPlan)
   * 磁盘文件已经加密，不需要加密
   * @param output
   * @param rdd
-  * @param isOblivious
   */
 case class EncryptedBlockRDDScanExec(
     output: Seq[Attribute],

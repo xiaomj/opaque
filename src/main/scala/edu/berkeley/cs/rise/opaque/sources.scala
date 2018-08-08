@@ -36,7 +36,7 @@ class EncryptedSource extends SchemaRelationProvider with CreatableRelationProvi
     sqlContext: SQLContext,
     parameters: Map[String, String],
     schema: StructType): BaseRelation = {
-    EncryptedScan(parameters("path"), schema, isOblivious(parameters))(sqlContext.sparkSession)
+    EncryptedScan(parameters("path"), schema)(sqlContext.sparkSession)
   }
 
   override def createRelation(
@@ -46,21 +46,13 @@ class EncryptedSource extends SchemaRelationProvider with CreatableRelationProvi
     data: DataFrame): BaseRelation = {
     val blocks: RDD[Block] = data.queryExecution.executedPlan.asInstanceOf[OpaqueOperatorExec].executeBlocked()
     blocks.map(x => Base64.getEncoder.encodeToString(x.bytes)).saveAsTextFile(parameters("path"))
-    EncryptedScan(parameters("path"), data.schema, isOblivious(parameters))(sqlContext.sparkSession)
-  }
-
-  private def isOblivious(parameters: Map[String, String]): Boolean = {
-    parameters.get("oblivious") match {
-      case Some("true") => true
-      case _ => false
-    }
+    EncryptedScan(parameters("path"), data.schema)(sqlContext.sparkSession)
   }
 }
 
 case class EncryptedScan(
     path: String,
-    override val schema: StructType,
-    val isOblivious: Boolean)(
+    override val schema: StructType)(
     @transient val sparkSession: SparkSession)
   extends BaseRelation {
 
