@@ -58,8 +58,7 @@ trait BinaryExecNode extends SparkPlan {
   */
 case class EncryptedLocalTableScanExec(
     output: Seq[Attribute],
-    plaintextData: Seq[InternalRow],
-    override val isOblivious: Boolean)
+    plaintextData: Seq[InternalRow])
   extends LeafExecNode with OpaqueOperatorExec {
 
   private val unsafeRows: Array[InternalRow] = {
@@ -94,9 +93,7 @@ case class EncryptedLocalTableScanExec(
   * @param isOblivious
   * @param child
   */
-case class EncryptExec(
-    override val isOblivious: Boolean,
-    child: SparkPlan)
+case class EncryptExec(child: SparkPlan)
   extends UnaryExecNode with OpaqueOperatorExec {
 
   override def output: Seq[Attribute] = child.output
@@ -116,8 +113,7 @@ case class EncryptExec(
   */
 case class EncryptedBlockRDDScanExec(
     output: Seq[Attribute],
-    rdd: RDD[Block],
-    override val isOblivious: Boolean)
+    rdd: RDD[Block])
   extends LeafExecNode with OpaqueOperatorExec {
 
   override def executeBlocked(): RDD[Block] = rdd
