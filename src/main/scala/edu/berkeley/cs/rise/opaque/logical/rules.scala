@@ -17,7 +17,6 @@
 
 package edu.berkeley.cs.rise.opaque.logical
 
-import edu.berkeley.cs.rise.opaque.logical._
 import edu.berkeley.cs.rise.opaque.EncryptedScan
 import edu.berkeley.cs.rise.opaque.Utils
 import edu.berkeley.cs.rise.opaque.execution.OpaqueOperatorExec
