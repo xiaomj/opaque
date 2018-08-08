@@ -248,7 +248,7 @@ case class ObliviousFilterExec(condition: Expression, child: SparkPlan)
 
     // 默认用第一列存放加密密文
     var encryptedRows: RDD[Block] = child.execute().map {
-      x => Block(Base64.getDecoder().decode(x.getUTF8String(0)))
+      x => Block(Base64.getDecoder().decode(x.getUTF8String(0).toString))
     }
 
     timeOperator(encryptedRows, "ObliviousFilterExec") {
