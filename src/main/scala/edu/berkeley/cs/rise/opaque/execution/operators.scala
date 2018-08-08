@@ -78,6 +78,8 @@ case class EncryptedLocalTableScanExec(
         (i, i+1)
       }
     }
+
+    println("executed")
     val slicedPlaintextData: Seq[Seq[InternalRow]] =
       positions(unsafeRows.length, sqlContext.sparkContext.defaultParallelism).map {
         case (start, end) => unsafeRows.slice(start, end).toSeq
