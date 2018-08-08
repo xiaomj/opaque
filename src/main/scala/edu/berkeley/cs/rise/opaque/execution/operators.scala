@@ -83,8 +83,6 @@ case class EncryptedLocalTableScanExec(
         case (start, end) => unsafeRows.slice(start, end).toSeq
       }.toSeq
 
-    val slicedPlaintextData: Seq[Seq[InternalRow]] =
-
     // Encrypt each local partition
     val encryptedPartitions: Seq[Block] =
       slicedPlaintextData.map(slice =>
