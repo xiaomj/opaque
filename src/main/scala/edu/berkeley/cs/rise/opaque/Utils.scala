@@ -85,6 +85,7 @@ import edu.berkeley.cs.rise.opaque.execution.OpaqueOperatorExec
 import edu.berkeley.cs.rise.opaque.execution.SGXEnclave
 import org.apache.spark.sql.hive.rules.ConvertToOpaqueOperators
 import org.apache.spark.sql.hive.rules.EncryptLocalRelation
+import org.apache.spark.sql.hive.OpaqueOperators
 
 object Utils {
   private val perf: Boolean = System.getenv("SGX_PERF") == "1"
