@@ -31,12 +31,12 @@ import org.apache.spark.sql.types.StructType
 import edu.berkeley.cs.rise.opaque.execution.Block
 import edu.berkeley.cs.rise.opaque.execution.OpaqueOperatorExec
 
-class EncryptedSource extends SchemaRelationProvider with CreatableRelationProvider {
+class EncryptSource extends SchemaRelationProvider with CreatableRelationProvider {
   override def createRelation(
     sqlContext: SQLContext,
     parameters: Map[String, String],
     schema: StructType): BaseRelation = {
-    EncryptedScan(parameters("path"), schema)(sqlContext.sparkSession)
+    EncryptScan(parameters("path"), schema)(sqlContext.sparkSession)
   }
 
   override def createRelation(
@@ -46,11 +46,11 @@ class EncryptedSource extends SchemaRelationProvider with CreatableRelationProvi
     data: DataFrame): BaseRelation = {
     val blocks: RDD[Block] = data.queryExecution.executedPlan.asInstanceOf[OpaqueOperatorExec].executeBlocked()
     blocks.map(x => Base64.getEncoder.encodeToString(x.bytes)).saveAsTextFile(parameters("path"))
-    EncryptedScan(parameters("path"), data.schema)(sqlContext.sparkSession)
+    EncryptScan(parameters("path"), data.schema)(sqlContext.sparkSession)
   }
 }
 
-case class EncryptedScan(
+case class EncryptScan(
     path: String,
     override val schema: StructType)(
     @transient val sparkSession: SparkSession)

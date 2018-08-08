@@ -17,7 +17,7 @@
 
 package edu.berkeley.cs.rise.opaque.logical
 
-import edu.berkeley.cs.rise.opaque.EncryptedScan
+import edu.berkeley.cs.rise.opaque.EncryptScan
 import edu.berkeley.cs.rise.opaque.Utils
 import edu.berkeley.cs.rise.opaque.execution.OpaqueOperatorExec
 import org.apache.spark.sql.InMemoryRelationMatcher
@@ -41,7 +41,7 @@ object EncryptLocalRelationRule extends Rule[LogicalPlan] {
 object EncryptRule extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transformUp {
     // 读取外部加密文件
-    case l @ LogicalRelation(baseRelation: EncryptedScan, _, _) =>
+    case l @ LogicalRelation(baseRelation: EncryptScan, _, _) =>
       EncryptLogicalRelation(l.output, baseRelation.buildBlockedScan())
 
     case p @ Project(projectList, child) =>
@@ -54,12 +54,12 @@ object EncryptRule extends Rule[LogicalPlan] {
     case p @ Filter(IsNotNull(_), child) =>
       child
     case p @ Filter(condition, child) =>
-      EncryptedFilter(condition, child)
+      EncryptFilter(condition, child)
     case p @ Sort(order, true, child)  =>
-      EncryptedSort(order, child)
+      EncryptSort(order, child)
 
     case p @ Join(left, right, joinType, condition) =>
-      EncryptedJoin(
+      EncryptJoin(
         left, right, joinType, condition)
 
     case p @ Aggregate(groupingExprs, aggExprs, child) =>
@@ -67,15 +67,15 @@ object EncryptRule extends Rule[LogicalPlan] {
         case Some((projectExprs, aggExprs)) =>
           EncryptProject(
             projectExprs,
-            EncryptedAggregate(
+            EncryptAggregate(
               groupingExprs, aggExprs,
-              EncryptedSort(
+              EncryptSort(
                 groupingExprs.map(e => SortOrder(e, Ascending)),
                 child)))
         case None =>
           EncryptAggregate(
             groupingExprs, aggExprs,
-            EncryptedSort(
+            EncryptSort(
               groupingExprs.map(e => SortOrder(e, Ascending)),
               child))
       }
@@ -88,7 +88,7 @@ object EncryptRule extends Rule[LogicalPlan] {
       ObliviousUnion(left, right)
 
     case InMemoryRelationMatcher(output, storageLevel, child) =>
-      EncryptedLogicalRelation(
+      EncryptLogicalRelation(
         output,
         Utils.ensureCached(child.asInstanceOf[OpaqueOperatorExec].executeBlocked(), storageLevel))
   }

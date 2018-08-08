@@ -55,8 +55,8 @@ object EncryptStrategy extends Strategy {
           val leftProj = ObliviousProjectExec(leftProjSchema, planLater(left))
           val rightProj = ObliviousProjectExec(rightProjSchema, planLater(right))
           val unioned = ObliviousUnionExec(leftProj, rightProj)
-          val sorted = EncryptedSortExec(sortForJoin(leftKeysProj, tag, unioned.output), unioned)
-          val joined = EncryptedSortMergeJoinExec(
+          val sorted = EncryptSortExec(sortForJoin(leftKeysProj, tag, unioned.output), unioned)
+          val joined = EncryptSortMergeJoinExec(
             joinType,
             leftKeysProj,
             rightKeysProj,
