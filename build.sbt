@@ -10,7 +10,7 @@ spName := "amplab/opaque"
 
 sparkVersion := "2.0.2"
 
-sparkComponents ++= Seq("core", "sql", "catalyst")
+sparkComponents ++= Seq("core", "sql", "catalyst", "hive")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
