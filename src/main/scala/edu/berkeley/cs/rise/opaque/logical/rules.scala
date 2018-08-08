@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.hive.rules
+package edu.berkeley.cs.rise.opaque.logical
 
 import edu.berkeley.cs.rise.opaque.logical._
 import edu.berkeley.cs.rise.opaque.EncryptedScan
