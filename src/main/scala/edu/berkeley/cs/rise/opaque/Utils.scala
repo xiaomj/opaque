@@ -83,8 +83,8 @@ import org.apache.spark.unsafe.types.UTF8String
 import edu.berkeley.cs.rise.opaque.execution.Block
 import edu.berkeley.cs.rise.opaque.execution.OpaqueOperatorExec
 import edu.berkeley.cs.rise.opaque.execution.SGXEnclave
-import edu.berkeley.cs.rise.opaque.logical.ConvertToOpaqueOperators
-import edu.berkeley.cs.rise.opaque.logical.EncryptLocalRelation
+import org.apache.spark.sql.hive.rules.ConvertToOpaqueOperators
+import org.apache.spark.sql.hive.rules.EncryptLocalRelation
 
 object Utils {
   private val perf: Boolean = System.getenv("SGX_PERF") == "1"

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package edu.berkeley.cs.rise.opaque.logical
+package org.apache.spark.sql.hive.rules
 
 import edu.berkeley.cs.rise.opaque.EncryptedScan
 import edu.berkeley.cs.rise.opaque.Utils
@@ -73,7 +73,6 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
       println("find metastore relation")
       l
     }
-
 
     case p @ Project(projectList, child) if isEncrypted(child) =>
       EncryptedProject(projectList, child)
