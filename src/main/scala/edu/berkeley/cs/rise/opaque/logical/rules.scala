@@ -55,18 +55,10 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
   }
 
   def isEncrypted(plan: LogicalPlan): Boolean = {
-//    plan.find {
-//      case _: OpaqueOperator => true
-//      case _ => false
-//    }.nonEmpty
     true
   }
 
   def isEncrypted(plan: SparkPlan): Boolean = {
-//    plan.find {
-//      case _: OpaqueOperatorExec => true
-//      case _ => false
-//    }.nonEmpty
     true
   }
 
@@ -75,8 +67,8 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
     case l @ LogicalRelation(baseRelation: EncryptedScan, _, _) =>
       EncryptedBlockRDD(l.output, baseRelation.buildBlockedScan(), baseRelation.isOblivious)
 
-//    case p @ Project(projectList, child) if isOblivious(child) =>
-//      ObliviousProject(projectList, child.asInstanceOf[OpaqueOperator])
+//    case l @ MetastoreRelation
+
     case p @ Project(projectList, child) if isEncrypted(child) =>
       EncryptedProject(projectList, child)
 
@@ -86,41 +78,15 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
       child
     case p @ Filter(IsNotNull(_), child) if isEncrypted(child) =>
       child
-
-//    case p @ Filter(condition, child) if isOblivious(child) =>
-//      ObliviousFilter(condition, ObliviousPermute(child.asInstanceOf[OpaqueOperator]))
     case p @ Filter(condition, child) if isEncrypted(child) =>
       EncryptedFilter(condition, child)
-
-//    case p @ Sort(order, true, child) if isOblivious(child) =>
-//      ObliviousSort(order, child.asInstanceOf[OpaqueOperator])
     case p @ Sort(order, true, child) if isEncrypted(child) =>
       EncryptedSort(order, child)
 
-//    case p @ Join(left, right, joinType, condition) if isOblivious(p) =>
-//      ObliviousJoin(
-//        left.asInstanceOf[OpaqueOperator], right.asInstanceOf[OpaqueOperator], joinType, condition)
     case p @ Join(left, right, joinType, condition) if isEncrypted(p) =>
       EncryptedJoin(
         left, right, joinType, condition)
 
-//    case p @ Aggregate(groupingExprs, aggExprs, child) if isOblivious(p) =>
-//      UndoCollapseProject.separateProjectAndAgg(p) match {
-//        case Some((projectExprs, aggExprs)) =>
-//          ObliviousProject(
-//            projectExprs,
-//            ObliviousAggregate(
-//              groupingExprs, aggExprs,
-//              ObliviousSort(
-//                groupingExprs.map(e => SortOrder(e, Ascending)),
-//                child.asInstanceOf[OpaqueOperator])))
-//        case None =>
-//          ObliviousAggregate(
-//            groupingExprs, aggExprs,
-//            ObliviousSort(
-//              groupingExprs.map(e => SortOrder(e, Ascending)),
-//              child.asInstanceOf[OpaqueOperator]))
-//      }
     case p @ Aggregate(groupingExprs, aggExprs, child) if isEncrypted(p) =>
       UndoCollapseProject.separateProjectAndAgg(p) match {
         case Some((projectExprs, aggExprs)) =>

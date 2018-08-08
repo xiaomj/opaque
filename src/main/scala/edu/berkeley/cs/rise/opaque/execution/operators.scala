@@ -72,15 +72,18 @@ case class EncryptedLocalTableScanExec(
     // Locally partition plaintextData using the same logic as ParallelCollectionRDD.slice
     def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
       (0 until numSlices).iterator.map { i =>
-        val start = ((i * length) / numSlices).toInt
-        val end = (((i + 1) * length) / numSlices).toInt
-        (start, end)
+//        val start = ((i * length) / numSlices).toInt
+//        val end = (((i + 1) * length) / numSlices).toInt
+//        (start, end)
+        (i, i+1)
       }
     }
     val slicedPlaintextData: Seq[Seq[InternalRow]] =
       positions(unsafeRows.length, sqlContext.sparkContext.defaultParallelism).map {
         case (start, end) => unsafeRows.slice(start, end).toSeq
       }.toSeq
+
+    val slicedPlaintextData: Seq[Seq[InternalRow]] =
 
     // Encrypt each local partition
     val encryptedPartitions: Seq[Block] =
