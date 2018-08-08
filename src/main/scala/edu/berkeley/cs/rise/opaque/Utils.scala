@@ -83,9 +83,9 @@ import org.apache.spark.unsafe.types.UTF8String
 import edu.berkeley.cs.rise.opaque.execution.Block
 import edu.berkeley.cs.rise.opaque.execution.OpaqueOperatorExec
 import edu.berkeley.cs.rise.opaque.execution.SGXEnclave
-import org.apache.spark.sql.hive.rules.ConvertToOpaqueOperators
-import org.apache.spark.sql.hive.rules.EncryptLocalRelation
-import org.apache.spark.sql.hive.OpaqueOperators
+import edu.berkeley.cs.rise.opaque.execution.EncryptStrategy
+import edu.berkeley.cs.rise.opaque.logical.EncryptRule
+import edu.berkeley.cs.rise.opaque.logical.EncryptLocalRelationRule
 
 object Utils {
   private val perf: Boolean = System.getenv("SGX_PERF") == "1"
@@ -202,10 +202,10 @@ object Utils {
 
   def initSQLContext(sqlContext: SQLContext): Unit = {
     sqlContext.experimental.extraOptimizations =
-      (Seq(EncryptLocalRelation, ConvertToOpaqueOperators) ++
+      (Seq(EncryptLocalRelationRule, EncryptRule) ++
         sqlContext.experimental.extraOptimizations)
     sqlContext.experimental.extraStrategies =
-      (Seq(OpaqueOperators) ++
+      (Seq(EncryptStrategy) ++
         sqlContext.experimental.extraStrategies)
   }
 

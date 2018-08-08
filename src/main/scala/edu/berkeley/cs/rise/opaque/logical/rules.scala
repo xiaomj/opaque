@@ -31,9 +31,8 @@ import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.execution.datasources.LogicalRelation
-import org.apache.spark.sql.hive.MetastoreRelation
 
-object EncryptLocalRelation extends Rule[LogicalPlan] {
+object EncryptLocalRelationRule extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transform {
     // 读取内存明文
     case Encrypt(isOblivious, LocalRelation(output, data)) =>
@@ -41,58 +40,31 @@ object EncryptLocalRelation extends Rule[LogicalPlan] {
   }
 }
 
-object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
-  def isOblivious(plan: LogicalPlan): Boolean = {
-    isEncrypted(plan) && plan.find {
-      case p: OpaqueOperator => p.isOblivious
-      case _ => false
-    }.nonEmpty
-  }
-
-  def isOblivious(plan: SparkPlan): Boolean = {
-    isEncrypted(plan) && plan.find {
-      case p: OpaqueOperatorExec => p.isOblivious
-      case _ => false
-    }.nonEmpty
-  }
-
-  def isEncrypted(plan: LogicalPlan): Boolean = {
-    true
-  }
-
-  def isEncrypted(plan: SparkPlan): Boolean = {
-    true
-  }
-
+object EncryptRule extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transformUp {
     // 读取外部加密文件
     case l @ LogicalRelation(baseRelation: EncryptedScan, _, _) =>
       EncryptedBlockRDD(l.output, baseRelation.buildBlockedScan(), baseRelation.isOblivious)
-
-    case l: MetastoreRelation => {
-      println("find metastore relation")
-      l
-    }
 
     case p @ Project(projectList, child) if isEncrypted(child) =>
       EncryptedProject(projectList, child)
 
     // We don't support null values yet, so there's no point in checking whether the output of an
     // encrypted operator is null
-    case p @ Filter(And(IsNotNull(_), IsNotNull(_)), child) if isEncrypted(child) =>
+    case p @ Filter(And(IsNotNull(_), IsNotNull(_)), child) =>
       child
-    case p @ Filter(IsNotNull(_), child) if isEncrypted(child) =>
+    case p @ Filter(IsNotNull(_), child) =>
       child
-    case p @ Filter(condition, child) if isEncrypted(child) =>
+    case p @ Filter(condition, child) =>
       EncryptedFilter(condition, child)
-    case p @ Sort(order, true, child) if isEncrypted(child) =>
+    case p @ Sort(order, true, child)  =>
       EncryptedSort(order, child)
 
-    case p @ Join(left, right, joinType, condition) if isEncrypted(p) =>
+    case p @ Join(left, right, joinType, condition) =>
       EncryptedJoin(
         left, right, joinType, condition)
 
-    case p @ Aggregate(groupingExprs, aggExprs, child) if isEncrypted(p) =>
+    case p @ Aggregate(groupingExprs, aggExprs, child) =>
       UndoCollapseProject.separateProjectAndAgg(p) match {
         case Some((projectExprs, aggExprs)) =>
           EncryptedProject(
@@ -111,13 +83,13 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
       }
 
     // For now, just ignore limits. TODO: Implement Opaque operators for these
-    case p @ GlobalLimit(_, child) if isEncrypted(p) => child
-    case p @ LocalLimit(_, child) if isEncrypted(p) => child
+    case p @ GlobalLimit(_, child) => child
+    case p @ LocalLimit(_, child) => child
 
-    case p @ Union(Seq(left, right)) if isEncrypted(p) =>
+    case p @ Union(Seq(left, right)) =>
       ObliviousUnion(left, right)
 
-    case InMemoryRelationMatcher(output, storageLevel, child) if isEncrypted(child) =>
+    case InMemoryRelationMatcher(output, storageLevel, child) =>
       EncryptedBlockRDD(
         output,
         Utils.ensureCached(

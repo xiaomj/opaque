@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.hive
+package edu.berkeley.cs.rise.opaque.execution
 
 import org.apache.spark.sql.Strategy
 import org.apache.spark.sql.catalyst.expressions.Alias
@@ -42,26 +42,10 @@ import org.apache.spark.sql.hive.execution._
 import edu.berkeley.cs.rise.opaque.execution._
 import edu.berkeley.cs.rise.opaque.logical._
 
-object OpaqueOperators extends Strategy {
-  self: SparkPlanner =>
-
+object EncryptStrategy extends Strategy {
   def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
     case EncryptedProject(projectList, child) =>
       ObliviousProjectExec(projectList, planLater(child)) :: Nil
-
-    // hive table scan
-    case PhysicalOperation(projectList, predicates, relation: MetastoreRelation) =>
-      println("self defined physical operation debug")
-      val partitionKeyIds = AttributeSet(relation.partitionKeys)
-      val (pruningPredicates, otherPredicates) = predicates.partition { predicate =>
-        !predicate.references.isEmpty &&
-          predicate.references.subsetOf(partitionKeyIds)
-      }
-      pruneFilterProject(
-        projectList,
-        otherPredicates,
-        identity[Seq[Expression]] _,
-        HiveTableScanExec(_, relation, pruningPredicates)(sparkSession)) :: Nil
 
     case EncryptedFilter(condition, child) =>
       ObliviousFilterExec(condition, planLater(child)) :: Nil
