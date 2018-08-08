@@ -71,7 +71,7 @@ case class EncryptedLocalTableScanExec(
   override def executeBlocked(): RDD[Block] = {
     // Locally partition plaintextData using the same logic as ParallelCollectionRDD.slice
     def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
-      (0 until numSlices).iterator.map { i =>
+      (0 until length).iterator.map { i =>
 //        val start = ((i * length) / numSlices).toInt
 //        val end = (((i + 1) * length) / numSlices).toInt
 //        (start, end)
@@ -79,7 +79,7 @@ case class EncryptedLocalTableScanExec(
       }
     }
 
-    println("executed: " + positions.toArray.mkString(","))
+    println("executed: " + positions(unsafeRows.length, 1).toArray.mkString(","))
     val slicedPlaintextData: Seq[Seq[InternalRow]] =
       positions(unsafeRows.length, sqlContext.sparkContext.defaultParallelism).map {
         case (start, end) => unsafeRows.slice(start, end).toSeq
