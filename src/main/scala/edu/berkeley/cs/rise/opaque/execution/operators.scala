@@ -238,11 +238,6 @@ case class ObliviousFilterExec(condition: Expression, child: SparkPlan)
   override def executeBlocked(): RDD[Block] = {
     val conditionSer = Utils.serializeFilterExpression(condition, child.output)
 
-    // 执行hive的table scan
-//    var encryptedRows: RDD[Block] = child.execute().mapPartitions { rowIter =>
-//      Iterator(Utils.encryptInternalRowsFlatbuffers(rowIter.toSeq, output.map(_.dataType)))
-//    }
-
     // 默认用第一列存放加密密文
     var encryptedRows: RDD[Block] = child.execute().map {
       x => Block(Base64.getDecoder().decode(x.getUTF8String(0).toString))

@@ -67,7 +67,11 @@ object ConvertToOpaqueOperators extends Rule[LogicalPlan] {
     case l @ LogicalRelation(baseRelation: EncryptedScan, _, _) =>
       EncryptedBlockRDD(l.output, baseRelation.buildBlockedScan(), baseRelation.isOblivious)
 
-//    case l @ MetastoreRelation
+    case l: MetastoreRelation => {
+      println("find metastore relation")
+      l
+    }
+
 
     case p @ Project(projectList, child) if isEncrypted(child) =>
       EncryptedProject(projectList, child)
