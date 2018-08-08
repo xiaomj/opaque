@@ -17,6 +17,7 @@
 
 package edu.berkeley.cs.rise.opaque
 
+import java.util.Base64
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.SaveMode
@@ -27,8 +28,6 @@ import org.apache.spark.sql.sources.CreatableRelationProvider
 import org.apache.spark.sql.sources.SchemaRelationProvider
 import org.apache.spark.sql.types.StructType
 
-import java.util.Base64
-
 import edu.berkeley.cs.rise.opaque.execution.Block
 import edu.berkeley.cs.rise.opaque.execution.OpaqueOperatorExec
 
@@ -37,8 +36,7 @@ class EncryptedSource extends SchemaRelationProvider with CreatableRelationProvi
     sqlContext: SQLContext,
     parameters: Map[String, String],
     schema: StructType): BaseRelation = {
-    EncryptedScan(parameters("path"), schema, isOblivious(parameters))(
-      sqlContext.sparkSession)
+    EncryptedScan(parameters("path"), schema, isOblivious(parameters))(sqlContext.sparkSession)
   }
 
   override def createRelation(
@@ -46,13 +44,9 @@ class EncryptedSource extends SchemaRelationProvider with CreatableRelationProvi
     mode: SaveMode,
     parameters: Map[String, String],
     data: DataFrame): BaseRelation = {
-    val blocks: RDD[Block] = data.queryExecution.executedPlan.asInstanceOf[OpaqueOperatorExec]
-      .executeBlocked()
-    println(blocks.count)
+    val blocks: RDD[Block] = data.queryExecution.executedPlan.asInstanceOf[OpaqueOperatorExec].executeBlocked()
     blocks.map(x => Base64.getEncoder.encodeToString(x.bytes)).saveAsTextFile(parameters("path"))
-//    blocks.map(block => (0, block.bytes)).saveAsSequenceFile(parameters("path"))
-    EncryptedScan(parameters("path"), data.schema, isOblivious(parameters))(
-      sqlContext.sparkSession)
+    EncryptedScan(parameters("path"), data.schema, isOblivious(parameters))(sqlContext.sparkSession)
   }
 
   private def isOblivious(parameters: Map[String, String]): Boolean = {
@@ -73,11 +67,6 @@ case class EncryptedScan(
   override def sqlContext: SQLContext = sparkSession.sqlContext
 
   override def needConversion: Boolean = false
-
-  //  def buildBlockedScan(): RDD[Block] = sparkSession.sparkContext
-//    .sequenceFile[Int, Array[Byte]](path).map {
-//      case (_, bytes) => Block(bytes)
-//    }
 
   def buildBlockedScan(): RDD[Block] = sparkSession.sparkContext.textFile(path).map(x => Block(Base64.getDecoder().decode(x)))
 }
