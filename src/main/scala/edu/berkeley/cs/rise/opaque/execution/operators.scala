@@ -279,6 +279,16 @@ object EncryptedSortExec {
   }
 }
 
+def execute(child: SparkPlan) = child match {
+  case :OpaqueOperatorExec =>
+    child.asInstanceOf[OpaqueOperatorExec].executeBlocked()
+  case _ =>
+    // 默认用第一列存放加密密文
+    child.execute().map {
+      x => Block(Base64.getDecoder().decode(x.getUTF8String(0).toString))
+    }
+}
+
 case class ObliviousProjectExec(projectList: Seq[NamedExpression], child: SparkPlan)
   extends UnaryExecNode with OpaqueOperatorExec {
 
@@ -286,7 +296,7 @@ case class ObliviousProjectExec(projectList: Seq[NamedExpression], child: SparkP
 
   override def executeBlocked() = {
     val projectListSer = Utils.serializeProjectList(projectList, child.output)
-    timeOperator(child.asInstanceOf[OpaqueOperatorExec].executeBlocked(), "ObliviousProjectExec") {
+    timeOperator(execute(child), "ObliviousProjectExec") {
       childRDD => childRDD.map { block =>
         val (enclave, eid) = Utils.initEnclave()
         Block(enclave.Project(eid, projectListSer, block.bytes))
@@ -304,12 +314,7 @@ case class ObliviousFilterExec(condition: Expression, child: SparkPlan)
   override def executeBlocked(): RDD[Block] = {
     val conditionSer = Utils.serializeFilterExpression(condition, child.output)
 
-    // 默认用第一列存放加密密文
-    var encryptedRows: RDD[Block] = child.execute().map {
-      x => Block(Base64.getDecoder().decode(x.getUTF8String(0).toString))
-    }
-
-    timeOperator(encryptedRows, "ObliviousFilterExec") {
+    timeOperator(execute(child), "ObliviousFilterExec") {
       childRDD => childRDD.map { block =>
         val (enclave, eid) = Utils.initEnclave()
         Block(enclave.Filter(eid, conditionSer, block.bytes))
@@ -333,7 +338,7 @@ case class EncryptedAggregateExec(
     val aggExprSer = Utils.serializeAggOp(groupingExpressions, aggExpressions, child.output)
 
     timeOperator(
-      child.asInstanceOf[OpaqueOperatorExec].executeBlocked(),
+      execute(child),
       "EncryptedAggregateExec") { childRDD =>
 
       val (firstRows, lastGroups, lastRows) = childRDD.map { block =>
@@ -381,7 +386,7 @@ case class EncryptedSortMergeJoinExec(
       joinType, leftKeys, rightKeys, leftSchema, rightSchema)
 
     timeOperator(
-      child.asInstanceOf[OpaqueOperatorExec].executeBlocked(),
+      execute(child),
       "EncryptedSortMergeJoinExec") { childRDD =>
 
       val lastPrimaryRows = childRDD.map { block =>
@@ -415,8 +420,8 @@ case class ObliviousUnionExec(
     left.output
 
   override def executeBlocked() = {
-    val leftRDD = left.asInstanceOf[OpaqueOperatorExec].executeBlocked()
-    val rightRDD = right.asInstanceOf[OpaqueOperatorExec].executeBlocked()
+    val leftRDD = execute(left)
+    val rightRDD = execute(right)
     Utils.ensureCached(leftRDD)
     time("Force left child of ObliviousUnionExec") { leftRDD.count }
     Utils.ensureCached(rightRDD)

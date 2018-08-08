@@ -90,9 +90,6 @@ object EncryptRule extends Rule[LogicalPlan] {
     case InMemoryRelationMatcher(output, storageLevel, child) =>
       EncryptedBlockRDD(
         output,
-        Utils.ensureCached(
-          child.asInstanceOf[OpaqueOperatorExec].executeBlocked(),
-          storageLevel),
-          false)
+        Utils.ensureCached(child.asInstanceOf[OpaqueOperatorExec].executeBlocked(), storageLevel), false)
   }
 }
