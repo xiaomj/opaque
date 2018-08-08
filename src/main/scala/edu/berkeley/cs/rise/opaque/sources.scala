@@ -48,6 +48,7 @@ class EncryptedSource extends SchemaRelationProvider with CreatableRelationProvi
     data: DataFrame): BaseRelation = {
     val blocks: RDD[Block] = data.queryExecution.executedPlan.asInstanceOf[OpaqueOperatorExec]
       .executeBlocked()
+    println(blocks.count)
     blocks.map(x => Base64.getEncoder.encodeToString(x.bytes)).saveAsTextFile(parameters("path"))
 //    blocks.map(block => (0, block.bytes)).saveAsSequenceFile(parameters("path"))
     EncryptedScan(parameters("path"), data.schema, isOblivious(parameters))(
