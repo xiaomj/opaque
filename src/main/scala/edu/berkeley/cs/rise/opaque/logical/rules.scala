@@ -46,7 +46,7 @@ object EncryptRule extends Rule[LogicalPlan] {
     case l @ LogicalRelation(baseRelation: EncryptedScan, _, _) =>
       EncryptedBlockRDD(l.output, baseRelation.buildBlockedScan(), baseRelation.isOblivious)
 
-    case p @ Project(projectList, child) if isEncrypted(child) =>
+    case p @ Project(projectList, child) =>
       EncryptedProject(projectList, child)
 
     // We don't support null values yet, so there's no point in checking whether the output of an
