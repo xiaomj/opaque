@@ -128,10 +128,15 @@ case class Block(bytes: Array[Byte]) extends Serializable
 trait OpaqueOperatorExec extends SparkPlan {
   def executeBlocked(): RDD[Block]
 
-  def isOblivious: Boolean = children.exists(_.find {
-    case p: OpaqueOperatorExec => p.isOblivious
-    case _ => false
-  }.nonEmpty)
+  def execute(child: SparkPlan) = child match {
+    case :OpaqueOperatorExec =>
+      child.asInstanceOf[OpaqueOperatorExec].executeBlocked()
+    case _ =>
+      // 默认用第一列存放加密密文
+      child.execute().map {
+        x => Block(Base64.getDecoder().decode(x.getUTF8String(0).toString))
+      }
+  }
 
   def timeOperator[A](childRDD: RDD[A], desc: String)(f: RDD[A] => RDD[Block]): RDD[Block] = {
     import Utils.time
@@ -277,16 +282,6 @@ object EncryptedSortExec {
       result
     }
   }
-}
-
-def execute(child: SparkPlan) = child match {
-  case :OpaqueOperatorExec =>
-    child.asInstanceOf[OpaqueOperatorExec].executeBlocked()
-  case _ =>
-    // 默认用第一列存放加密密文
-    child.execute().map {
-      x => Block(Base64.getDecoder().decode(x.getUTF8String(0).toString))
-    }
 }
 
 case class ObliviousProjectExec(projectList: Seq[NamedExpression], child: SparkPlan)
