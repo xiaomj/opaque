@@ -41,16 +41,9 @@ trait OpaqueOperator extends LogicalPlan {
    * references to include all inputs to prevent Catalyst from dropping any input columns.
    */
   override def references: AttributeSet = inputSet
-
-  def isOblivious: Boolean = children.exists(_.find {
-    case p: OpaqueOperator => p.isOblivious
-    case _ => false
-  }.nonEmpty)
 }
 
-case class Encrypt(
-    val isOblivious: Boolean,
-    child: LogicalPlan)
+case class Encrypt(child: LogicalPlan)
   extends UnaryNode {
 
   override def output: Seq[Attribute] = child.output
@@ -58,8 +51,7 @@ case class Encrypt(
 
 case class EncryptedLocalRelation(
     output: Seq[Attribute],
-    plaintextData: Seq[InternalRow],
-    val isOblivious: Boolean)
+    plaintextData: Seq[InternalRow])
   extends LeafNode with MultiInstanceRelation {
 
   // A local relation must have resolved output.
@@ -86,8 +78,7 @@ case class EncryptedLocalRelation(
 
 case class EncryptedBlockRDD(
     output: Seq[Attribute],
-    rdd: RDD[Block],
-    val isOblivious: Boolean)
+    rdd: RDD[Block])
   extends LogicalPlan with MultiInstanceRelation {
 
   override def children: Seq[LogicalPlan] = Nil

@@ -74,14 +74,14 @@ object EncryptStrategy extends Strategy {
     case ObliviousUnion(left, right) =>
       ObliviousUnionExec(planLater(left), planLater(right)) :: Nil
 
-    case Encrypt(isOblivious, child) =>
-      EncryptExec(isOblivious, planLater(child)) :: Nil
+    case Encrypt(child) =>
+      EncryptExec(planLater(child)) :: Nil
 
-    case EncryptedLocalRelation(output, plaintextData, isOblivious) =>
-      EncryptedLocalTableScanExec(output, plaintextData, isOblivious) :: Nil
+    case EncryptedLocalRelation(output, plaintextData) =>
+      EncryptedLocalTableScanExec(output, plaintextData) :: Nil
 
-    case EncryptedBlockRDD(output, rdd, isOblivious) =>
-      EncryptedBlockRDDScanExec(output, rdd, isOblivious) :: Nil
+    case EncryptedBlockRDD(output, rdd) =>
+      EncryptedBlockRDDScanExec(output, rdd) :: Nil
 
     case _ => Nil
   }
