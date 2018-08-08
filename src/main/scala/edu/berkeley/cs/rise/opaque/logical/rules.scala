@@ -34,7 +34,7 @@ object EncryptLocalRelationRule extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transform {
     // 读取内存明文
     case Encrypt(LocalRelation(output, data)) =>
-      EncryptedLocalRelation(output, data)
+      EncryptLocalRelation(output, data)
   }
 }
 
@@ -42,10 +42,10 @@ object EncryptRule extends Rule[LogicalPlan] {
   def apply(plan: LogicalPlan): LogicalPlan = plan transformUp {
     // 读取外部加密文件
     case l @ LogicalRelation(baseRelation: EncryptedScan, _, _) =>
-      EncryptedLogicalRelation(l.output, baseRelation.buildBlockedScan())
+      EncryptLogicalRelation(l.output, baseRelation.buildBlockedScan())
 
     case p @ Project(projectList, child) =>
-      EncryptedProject(projectList, child)
+      EncryptProject(projectList, child)
 
     // We don't support null values yet, so there's no point in checking whether the output of an
     // encrypted operator is null
@@ -65,7 +65,7 @@ object EncryptRule extends Rule[LogicalPlan] {
     case p @ Aggregate(groupingExprs, aggExprs, child) =>
       UndoCollapseProject.separateProjectAndAgg(p) match {
         case Some((projectExprs, aggExprs)) =>
-          EncryptedProject(
+          EncryptProject(
             projectExprs,
             EncryptedAggregate(
               groupingExprs, aggExprs,
@@ -73,7 +73,7 @@ object EncryptRule extends Rule[LogicalPlan] {
                 groupingExprs.map(e => SortOrder(e, Ascending)),
                 child)))
         case None =>
-          EncryptedAggregate(
+          EncryptAggregate(
             groupingExprs, aggExprs,
             EncryptedSort(
               groupingExprs.map(e => SortOrder(e, Ascending)),

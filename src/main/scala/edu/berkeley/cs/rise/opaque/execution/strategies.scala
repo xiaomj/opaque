@@ -38,16 +38,16 @@ import edu.berkeley.cs.rise.opaque.logical._
 
 object EncryptStrategy extends Strategy {
   def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
-    case EncryptedProject(projectList, child) =>
+    case EncryptProject(projectList, child) =>
       ObliviousProjectExec(projectList, planLater(child)) :: Nil
 
-    case EncryptedFilter(condition, child) =>
+    case EncryptFilter(condition, child) =>
       ObliviousFilterExec(condition, planLater(child)) :: Nil
 
-    case EncryptedSort(order, child) =>
-      EncryptedSortExec(order, planLater(child)) :: Nil
+    case EncryptSort(order, child) =>
+      EncryptSortExec(order, planLater(child)) :: Nil
 
-    case EncryptedJoin(left, right, joinType, condition) =>
+    case EncryptJoin(left, right, joinType, condition) =>
       Join(left, right, joinType, condition) match {
         case ExtractEquiJoinKeys(_, leftKeys, rightKeys, condition, _, _) =>
           val (leftProjSchema, leftKeysProj, tag) = tagForJoin(leftKeys, left.output, true)
@@ -68,8 +68,8 @@ object EncryptStrategy extends Strategy {
         case _ => Nil
       }
 
-    case a @ EncryptedAggregate(groupingExpressions, aggExpressions, child) =>
-      EncryptedAggregateExec(groupingExpressions, aggExpressions, planLater(child)) :: Nil
+    case a @ EncryptAggregate(groupingExpressions, aggExpressions, child) =>
+      EncryptAggregateExec(groupingExpressions, aggExpressions, planLater(child)) :: Nil
 
     case ObliviousUnion(left, right) =>
       ObliviousUnionExec(planLater(left), planLater(right)) :: Nil
@@ -77,11 +77,11 @@ object EncryptStrategy extends Strategy {
     case Encrypt(child) =>
       EncryptExec(planLater(child)) :: Nil
 
-    case EncryptedLocalRelation(output, plaintextData) =>
-      EncryptedLocalTableScanExec(output, plaintextData) :: Nil
+    case EncryptLocalRelation(output, plaintextData) =>
+      EncryptLocalTableScanExec(output, plaintextData) :: Nil
 
-    case EncryptedLogicalRelation(output, rdd) =>
-      EncryptedLogicalRelationExec(output, rdd) :: Nil
+    case EncryptLogicalRelation(output, rdd) =>
+      EncryptLogicalRelationExec(output, rdd) :: Nil
 
     case _ => Nil
   }
