@@ -51,7 +51,7 @@ trait BinaryExecNode extends SparkPlan {
 }
 
 /**
-  * 手动加密
+  * API创建的表，手动加密
   * @param output
   * @param plaintextData
   */
@@ -88,23 +88,7 @@ case class EncryptLocalRelationExec(
 }
 
 /**
-  * 需要手动加密
-  * @param child
-  */
-case class EncryptExec(child: SparkPlan)
-  extends UnaryExecNode with OpaqueOperatorExec {
-
-  override def output: Seq[Attribute] = child.output
-
-  override def executeBlocked(): RDD[Block] = {
-    child.execute().mapPartitions { rowIter =>
-      Iterator(Utils.encryptInternalRowsFlatbuffers(rowIter.toSeq, output.map(_.dataType)))
-    }
-  }
-}
-
-/**
-  * 磁盘文件已经加密，不需要加密
+  * 加密好的磁盘文件，直接加载
   * @param output
   * @param rdd
   */
@@ -121,7 +105,7 @@ case class Block(bytes: Array[Byte]) extends Serializable
 trait OpaqueOperatorExec extends SparkPlan {
   def executeBlocked(): RDD[Block]
 
-  def execute(child: SparkPlan) = child match {
+  def executeChild(child: SparkPlan) = child match {
     case child :OpaqueOperatorExec =>
       child.asInstanceOf[OpaqueOperatorExec].executeBlocked()
     case _ =>
@@ -284,7 +268,7 @@ case class ObliviousProjectExec(projectList: Seq[NamedExpression], child: SparkP
 
   override def executeBlocked() = {
     val projectListSer = Utils.serializeProjectList(projectList, child.output)
-    timeOperator(execute(child), "ObliviousProjectExec") {
+    timeOperator(executeChild(child), "ObliviousProjectExec") {
       childRDD => childRDD.map { block =>
         val (enclave, eid) = Utils.initEnclave()
         Block(enclave.Project(eid, projectListSer, block.bytes))
@@ -302,7 +286,7 @@ case class ObliviousFilterExec(condition: Expression, child: SparkPlan)
   override def executeBlocked(): RDD[Block] = {
     val conditionSer = Utils.serializeFilterExpression(condition, child.output)
 
-    timeOperator(execute(child), "ObliviousFilterExec") {
+    timeOperator(executeChild(child), "ObliviousFilterExec") {
       childRDD => childRDD.map { block =>
         val (enclave, eid) = Utils.initEnclave()
         Block(enclave.Filter(eid, conditionSer, block.bytes))
@@ -325,10 +309,7 @@ case class EncryptAggregateExec(
   override def executeBlocked(): RDD[Block] = {
     val aggExprSer = Utils.serializeAggOp(groupingExpressions, aggExpressions, child.output)
 
-    timeOperator(
-      execute(child),
-      "EncryptedAggregateExec") { childRDD =>
-
+    timeOperator(executeChild(child), "EncryptedAggregateExec") { childRDD =>
       val (firstRows, lastGroups, lastRows) = childRDD.map { block =>
         val (enclave, eid) = Utils.initEnclave()
         val (firstRow, lastGroup, lastRow) = enclave.NonObliviousAggregateStep1(
@@ -373,10 +354,7 @@ case class EncryptSortMergeJoinExec(
     val joinExprSer = Utils.serializeJoinExpression(
       joinType, leftKeys, rightKeys, leftSchema, rightSchema)
 
-    timeOperator(
-      execute(child),
-      "EncryptedSortMergeJoinExec") { childRDD =>
-
+    timeOperator(executeChild(child), "EncryptedSortMergeJoinExec") { childRDD =>
       val lastPrimaryRows = childRDD.map { block =>
         val (enclave, eid) = Utils.initEnclave()
         Block(enclave.ScanCollectLastPrimary(eid, joinExprSer, block.bytes))

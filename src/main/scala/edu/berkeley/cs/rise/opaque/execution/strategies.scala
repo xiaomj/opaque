@@ -74,9 +74,6 @@ object EncryptStrategy extends Strategy {
     case ObliviousUnion(left, right) =>
       ObliviousUnionExec(planLater(left), planLater(right)) :: Nil
 
-    case Encrypt(child) =>
-      EncryptExec(planLater(child)) :: Nil
-
     case EncryptLocalRelation(output, plaintextData) =>
       EncryptLocalRelationExec(output, plaintextData) :: Nil
 
