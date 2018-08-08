@@ -48,8 +48,8 @@ class EncryptedSource extends SchemaRelationProvider with CreatableRelationProvi
     data: DataFrame): BaseRelation = {
     val blocks: RDD[Block] = data.queryExecution.executedPlan.asInstanceOf[OpaqueOperatorExec]
       .executeBlocked()
-    blocks.map(Base64.getEncoder.encodeToString(_.bytes)).saveAsTextFile(parameters("path"))
-//    blocks.map(block => (0, block.bytes)).saveAsTextFile(parameters("path"))
+    blocks.map(x => Base64.getEncoder.encodeToString(x.bytes)).saveAsTextFile(parameters("path"))
+//    blocks.map(block => (0, block.bytes)).saveAsSequenceFile(parameters("path"))
     EncryptedScan(parameters("path"), data.schema, isOblivious(parameters))(
       sqlContext.sparkSession)
   }
@@ -78,7 +78,5 @@ case class EncryptedScan(
 //      case (_, bytes) => Block(bytes)
 //    }
 
-  def buildBlockedScan(): RDD[Block] = sparkSession.sparkContext.textFile(path).map {
-    Block(Base64.getDecoder().decode(_))
-  }
+  def buildBlockedScan(): RDD[Block] = sparkSession.sparkContext.textFile(path).map(x => Block(Base64.getDecoder().decode(x))
 }
