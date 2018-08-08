@@ -78,5 +78,5 @@ case class EncryptedScan(
 //      case (_, bytes) => Block(bytes)
 //    }
 
-  def buildBlockedScan(): RDD[Block] = sparkSession.sparkContext.textFile(path).map(x => Block(Base64.getDecoder().decode(x))
+  def buildBlockedScan(): RDD[Block] = sparkSession.sparkContext.textFile(path).map(x => Block(Base64.getDecoder().decode(x)))
 }
