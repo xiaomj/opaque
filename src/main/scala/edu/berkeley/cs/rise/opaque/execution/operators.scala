@@ -136,7 +136,7 @@ trait OpaqueOperatorExec extends SparkPlan {
    * relation from the logical plan, but this only happens after InMemoryRelation has called this
    * method. We therefore have to silently return an empty RDD here.
    */
-  override def doExecute(): RDD[Block] = {
+  override def doExecute(): Array[InternalRow] = {
     sqlContext.sparkContext.emptyRDD
     // throw new UnsupportedOperationException("use executeBlocked")
   }
