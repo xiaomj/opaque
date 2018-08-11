@@ -69,7 +69,7 @@ case class EncryptLocalRelationExec(
   override def executeBlocked(): RDD[Block] = {
     // Locally partition plaintextData using the same logic as ParallelCollectionRDD.slice
     def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
-      (0 until length.toInt).iterator.map { i => (i, i+1) }
+      (0 until length.toInt).iterator.map { i => (i, i + 1) }
     }
 
     val slicedPlaintextData: Seq[Seq[InternalRow]] =
@@ -105,8 +105,8 @@ case class Block(bytes: Array[Byte]) extends Serializable
 trait OpaqueOperatorExec extends SparkPlan {
   def executeBlocked(): RDD[Block]
 
-  def executeChild(child: SparkPlan) = child match {
-    case child :OpaqueOperatorExec =>
+  def executeChild(child: SparkPlan): RDD[Block] = child match {
+    case child: OpaqueOperatorExec =>
       child.asInstanceOf[OpaqueOperatorExec].executeBlocked()
     case _ =>
       // 默认用第一列存放加密密文
@@ -136,7 +136,7 @@ trait OpaqueOperatorExec extends SparkPlan {
    * relation from the logical plan, but this only happens after InMemoryRelation has called this
    * method. We therefore have to silently return an empty RDD here.
    */
-  override def doExecute() = {
+  override def doExecute(): RDD[Block] = {
     sqlContext.sparkContext.emptyRDD
     // throw new UnsupportedOperationException("use executeBlocked")
   }
@@ -200,7 +200,7 @@ case class EncryptSortExec(order: Seq[SortOrder], child: SparkPlan)
 
   override def output: Seq[Attribute] = child.output
 
-  override def executeBlocked() = {
+  override def executeBlocked(): RDD[Block] = {
     val orderSer = Utils.serializeSortOrder(order, child.output)
     EncryptSortExec.sort(child.asInstanceOf[OpaqueOperatorExec].executeBlocked(), orderSer)
   }
@@ -264,10 +264,11 @@ object EncryptSortExec {
 case class ObliviousProjectExec(projectList: Seq[NamedExpression], child: SparkPlan)
   extends UnaryExecNode with OpaqueOperatorExec {
 
-  override def output: Seq[Attribute] = projectList.map(_.toAttribute)
+  val filteredProjectList = projectList.filterNot(_.toAttribute.name.equalsIgnoreCase("defaultCol"))
 
-  override def executeBlocked() = {
-    val projectListSer = Utils.serializeProjectList(projectList, child.output)
+  override def output: Seq[Attribute] = filteredProjectList.map(_.toAttribute)
+  override def executeBlocked(): RDD[Block] = {
+    val projectListSer = Utils.serializeProjectList(filteredProjectList, child.output)
     timeOperator(executeChild(child), "ObliviousProjectExec") {
       childRDD => childRDD.map { block =>
         val (enclave, eid) = Utils.initEnclave()
@@ -350,7 +351,7 @@ case class EncryptSortMergeJoinExec(
     child: SparkPlan)
   extends UnaryExecNode with OpaqueOperatorExec {
 
-  override def executeBlocked() = {
+  override def executeBlocked(): RDD[Block] = {
     val joinExprSer = Utils.serializeJoinExpression(
       joinType, leftKeys, rightKeys, leftSchema, rightSchema)
 
@@ -385,7 +386,7 @@ case class ObliviousUnionExec(
   override def output: Seq[Attribute] =
     left.output
 
-  override def executeBlocked() = {
+  override def executeBlocked(): RDD[Block] = {
     val leftRDD = executeChild(left)
     val rightRDD = executeChild(right)
     Utils.ensureCached(leftRDD)
