@@ -264,10 +264,15 @@ object EncryptSortExec {
 case class ObliviousProjectExec(projectList: Seq[NamedExpression], child: SparkPlan)
   extends UnaryExecNode with OpaqueOperatorExec {
 
+
   val filteredProjectList = projectList.filterNot(_.toAttribute.name.equalsIgnoreCase("defaultCol"))
 
   override def output: Seq[Attribute] = filteredProjectList.map(_.toAttribute)
   override def executeBlocked(): RDD[Block] = {
+
+    projectList.foreach(println)
+    filteredProjectList.foreach(println)
+
     val projectListSer = Utils.serializeProjectList(filteredProjectList, child.output)
     timeOperator(executeChild(child), "ObliviousProjectExec") {
       childRDD => childRDD.map { block =>
