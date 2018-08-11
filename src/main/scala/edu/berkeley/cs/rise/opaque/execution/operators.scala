@@ -272,6 +272,7 @@ case class ObliviousProjectExec(projectList: Seq[NamedExpression], child: SparkP
 
     projectList.foreach(println)
     filteredProjectList.foreach(println)
+    println("debug")
 
     val projectListSer = Utils.serializeProjectList(filteredProjectList, child.output)
     timeOperator(executeChild(child), "ObliviousProjectExec") {
